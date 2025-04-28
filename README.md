@@ -14,8 +14,8 @@ An [Unpoly](https://unpoly.com/) extension for submitting HTML forms as JSON acc
 - [x] Parse nested objects via bracket syntax (e.g., `user[name]`)
 - [x] Parse arrays via bracket syntax (e.g., `tags[]`)
 - [x] Skip unchecked checkboxes and radios
-- [ ] Skip disabled form controls
-- [ ] Handle multiple values for the same name
+- [c] Skip disabled form controls
+- [c] Handle multiple values for the same name
 - [ ] Preserve empty fields properly (optional, spec-compliant)
 - [ ] Support `<select multiple>` arrays
 - [ ] Skip or error `<input type="file">`

@@ -259,6 +259,38 @@ describe('up-json-form', function() {
     button.click()
   })
 
+  it('submits multiple fields with same name into array', function(done) {
+    const form = document.createElement('form')
+    form.setAttribute('enctype', 'application/json')
+    form.setAttribute('method', 'POST')
+    form.setAttribute('action', '/submit')
+  
+    const input1 = document.createElement('input')
+    input1.name = 'tag'
+    input1.value = 'a'
+  
+    const input2 = document.createElement('input')
+    input2.name = 'tag'
+    input2.value = 'b'
+  
+    form.appendChild(input1)
+    form.appendChild(input2)
+  
+    const button = document.createElement('button')
+    button.type = 'submit'
+    form.appendChild(button)
+  
+    document.body.appendChild(form)
+    up.hello(form)
+  
+    spyOn(up, 'submit').and.callFake(function(submittedForm, options) {
+      expect(JSON.parse(options.body)).toEqual({ tag: ['a', 'b'] })
+      done()
+    })
+  
+    button.click()
+  })
+
   it('skips unchecked radio button', function(done) {
     const form = document.createElement('form')
     form.setAttribute('enctype', 'application/json')
@@ -285,4 +317,38 @@ describe('up-json-form', function() {
 
     button.click()
   })
+
+  it('skips disabled form fields', function(done) {
+    const form = document.createElement('form')
+    form.setAttribute('enctype', 'application/json')
+    form.setAttribute('method', 'POST')
+    form.setAttribute('action', '/submit')
+  
+    const input1 = document.createElement('input')
+    input1.name = 'username'
+    input1.value = 'bob'
+    input1.disabled = true
+  
+    const input2 = document.createElement('input')
+    input2.name = 'age'
+    input2.type = 'number'
+    input2.value = '30'
+  
+    form.appendChild(input1)
+    form.appendChild(input2)
+  
+    const button = document.createElement('button')
+    button.type = 'submit'
+    form.appendChild(button)
+  
+    document.body.appendChild(form)
+    up.hello(form)
+  
+    spyOn(up, 'submit').and.callFake(function(submittedForm, options) {
+      expect(JSON.parse(options.body)).toEqual({ age: 30 })
+      done()
+    })
+  
+    button.click()
+  })  
 })

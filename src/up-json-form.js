@@ -43,8 +43,12 @@ function assignField(obj, name, value) {
           current = []
         }
         current.push(value)
-      } else {
+      } else if (current[part] === undefined) {
         current[part] = value
+      } else if (Array.isArray(current[part])) {
+        current[part].push(value)
+      } else {
+        current[part] = [current[part], value]
       }
     } else {
       if (part === '') {
