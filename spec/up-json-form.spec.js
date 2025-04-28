@@ -414,6 +414,118 @@ describe('up-json-form', function() {
 
     button.click()
   })
+
+  it('submits array for select[multiple] with multiple selected options', function(done) {
+    const form = document.createElement('form')
+    form.setAttribute('enctype', 'application/json')
+    form.setAttribute('method', 'POST')
+    form.setAttribute('action', '/submit')
+  
+    const select = document.createElement('select')
+    select.name = 'fruits'
+    select.multiple = true
+  
+    const apple = document.createElement('option')
+    apple.value = 'apple'
+    apple.selected = true
+  
+    const banana = document.createElement('option')
+    banana.value = 'banana'
+    banana.selected = true
+  
+    const cherry = document.createElement('option')
+    cherry.value = 'cherry'
+  
+    select.appendChild(apple)
+    select.appendChild(banana)
+    select.appendChild(cherry)
+    form.appendChild(select)
+  
+    const button = document.createElement('button')
+    button.type = 'submit'
+    form.appendChild(button)
+  
+    document.body.appendChild(form)
+    up.hello(form)
+  
+    spyOn(up, 'submit').and.callFake(function(submittedForm, options) {
+      expect(JSON.parse(options.body)).toEqual({ fruits: ['apple', 'banana'] })
+      done()
+    })
+  
+    button.click()
+  })
+
+  it('submits single-element array for select[multiple] with one selected option', function(done) {
+    const form = document.createElement('form')
+    form.setAttribute('enctype', 'application/json')
+    form.setAttribute('method', 'POST')
+    form.setAttribute('action', '/submit')
+  
+    const select = document.createElement('select')
+    select.name = 'colors'
+    select.multiple = true
+  
+    const red = document.createElement('option')
+    red.value = 'red'
+    red.selected = true
+  
+    const blue = document.createElement('option')
+    blue.value = 'blue'
+  
+    select.appendChild(red)
+    select.appendChild(blue)
+    form.appendChild(select)
+  
+    const button = document.createElement('button')
+    button.type = 'submit'
+    form.appendChild(button)
+  
+    document.body.appendChild(form)
+    up.hello(form)
+  
+    spyOn(up, 'submit').and.callFake(function(submittedForm, options) {
+      expect(JSON.parse(options.body)).toEqual({ colors: ['red'] })
+      done()
+    })
+  
+    button.click()
+  })
+
+  it('skips select[multiple] with no selected options', function(done) {
+    const form = document.createElement('form')
+    form.setAttribute('enctype', 'application/json')
+    form.setAttribute('method', 'POST')
+    form.setAttribute('action', '/submit')
+  
+    const select = document.createElement('select')
+    select.name = 'hobbies'
+    select.multiple = true
+  
+    const swim = document.createElement('option')
+    swim.value = 'swimming'
+  
+    const run = document.createElement('option')
+    run.value = 'running'
+  
+    select.appendChild(swim)
+    select.appendChild(run)
+    form.appendChild(select)
+  
+    const button = document.createElement('button')
+    button.type = 'submit'
+    form.appendChild(button)
+  
+    document.body.appendChild(form)
+    up.hello(form)
+  
+    spyOn(up, 'submit').and.callFake(function(submittedForm, options) {
+      expect(JSON.parse(options.body)).toEqual({})
+      done()
+    })
+  
+    button.click()
+  })
   
   it('submits hidden inputs normally', function(done) {
     const form = document.createElement('form')
@@ -561,7 +673,7 @@ describe('up-json-form', function() {
     form.setAttribute('method', 'POST')
     form.setAttribute('action', '/submit')
   
-    const types = ['text', 'textarea', 'email', 'password', 'search', 'tel', 'url']
+    const types = ['text', 'textarea', 'email', 'password', 'search', 'tel', 'url', 'hidden']
     const expected = {}
   
     for (const type of types) {
