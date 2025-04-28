@@ -103,7 +103,7 @@ describe('up-json-form', function() {
     button.click()
   })
 
-  it('submits an unchecked checkbox as false', function(done) {
+  it('skips an unchecked checkbox', function(done) {
     const form = document.createElement('form')
     form.setAttribute('enctype', 'application/json')
     form.setAttribute('method', 'POST')
@@ -123,7 +123,7 @@ describe('up-json-form', function() {
     up.hello(form)
 
     spyOn(up, 'submit').and.callFake(function(submittedForm, options) {
-      expect(JSON.parse(options.body)).toEqual({ subscribe: false })
+      expect(JSON.parse(options.body)).toEqual({})
       done()
     })
 
@@ -253,6 +253,33 @@ describe('up-json-form', function() {
 
     spyOn(up, 'submit').and.callFake(function(submittedForm, options) {
       expect(JSON.parse(options.body)).toEqual({ items: ['apple', 'banana'] })
+      done()
+    })
+
+    button.click()
+  })
+
+  it('skips unchecked radio button', function(done) {
+    const form = document.createElement('form')
+    form.setAttribute('enctype', 'application/json')
+    form.setAttribute('method', 'POST')
+    form.setAttribute('action', '/submit')
+
+    const radio = document.createElement('input')
+    radio.type = 'radio'
+    radio.name = 'gender'
+    radio.checked = false
+    form.appendChild(radio)
+
+    const button = document.createElement('button')
+    button.type = 'submit'
+    form.appendChild(button)
+
+    document.body.appendChild(form)
+    up.hello(form)
+
+    spyOn(up, 'submit').and.callFake(function(submittedForm, options) {
+      expect(JSON.parse(options.body)).toEqual({})
       done()
     })
 

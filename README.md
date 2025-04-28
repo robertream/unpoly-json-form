@@ -13,10 +13,13 @@ An [Unpoly](https://unpoly.com/) extension for submitting HTML forms as JSON acc
 - [x] Auto-convert field values into `boolean`, `number`, `null`, or `string`
 - [x] Parse nested objects via bracket syntax (e.g., `user[name]`)
 - [x] Parse arrays via bracket syntax (e.g., `tags[]`)
-- [ ] Skip unchecked checkboxes and radios
+- [x] Skip unchecked checkboxes and radios
 - [ ] Skip disabled form controls
 - [ ] Handle multiple values for the same name
 - [ ] Preserve empty fields properly (optional, spec-compliant)
+- [ ] Support `<select multiple>` arrays
+- [ ] Skip or error `<input type="file">`
+- [ ] Fine-grain W3C compliance (unnamed fields, deeper skipping)
 
 ## License
 

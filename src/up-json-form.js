@@ -10,10 +10,9 @@ function parseFormElements(form) {
     if (!element.name || element.disabled) continue
 
     let value = element.value
-
     if (element.type === 'number') {
       value = (value === '') ? null : Number(value)
-    } else if (element.type === 'checkbox') {
+    } else if (element.type === 'checkbox' || element.type === 'radio') {
       value = element.checked
     }
 
