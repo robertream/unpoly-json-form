@@ -561,7 +561,7 @@ describe('up-json-form', function() {
     form.setAttribute('method', 'POST')
     form.setAttribute('action', '/submit')
   
-    const types = ['text', 'textarea', 'email', 'password', 'search', 'tel', 'url']
+    const types = ['text', 'textarea', 'email', 'password', 'search', 'tel', 'url', 'hidden']
     const expected = {}
   
     for (const type of types) {

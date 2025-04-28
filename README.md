@@ -16,7 +16,7 @@ An [Unpoly](https://unpoly.com/) extension for submitting HTML forms as JSON acc
 - [x] Skip unchecked checkboxes and radios
 - [x] Skip disabled form controls
 - [x] Handle multiple values for the same name
-- [ ] Preserve empty fields properly (optional, spec-compliant)
+- [x] Preserve empty fields properly (optional, spec-compliant)
 - [ ] Support `<select multiple>` arrays
 - [ ] Skip or error `<input type="file">`
 - [ ] Fine-grain W3C compliance (unnamed fields, deeper skipping)
