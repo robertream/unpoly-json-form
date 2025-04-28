@@ -1,0 +1,23 @@
+# unpoly-json-form
+
+An [Unpoly](https://unpoly.com/) extension for submitting HTML forms as JSON according to the [W3C HTML JSON Form Submission](https://www.w3.org/TR/html-json-forms/) specification.
+
+## Status
+
+🚧 Initial development in progress.
+
+## Planned Features
+
+- [ ] Submit empty form as {}
+- [ ] Serialize flat key/value fields
+- [ ] Auto-convert field values into `boolean`, `number`, `null`, or `string`
+- [ ] Parse nested objects via bracket syntax (e.g., `user[name]`)
+- [ ] Parse arrays via bracket syntax (e.g., `tags[]`)
+- [ ] Skip unchecked checkboxes and radios
+- [ ] Skip disabled form controls
+- [ ] Handle multiple values for the same name
+- [ ] Preserve empty fields properly (optional, spec-compliant)
+
+## License
+
+MIT © 2025 Robert Ream
