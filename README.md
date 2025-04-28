@@ -8,7 +8,7 @@ An [Unpoly](https://unpoly.com/) extension for submitting HTML forms as JSON acc
 
 ## Planned Features
 
-- [ ] Submit empty form as {}
+- [x] Submit empty form as {}
 - [ ] Serialize flat key/value fields
 - [ ] Auto-convert field values into `boolean`, `number`, `null`, or `string`
 - [ ] Parse nested objects via bracket syntax (e.g., `user[name]`)
