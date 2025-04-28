@@ -173,4 +173,89 @@ describe('up-json-form', function() {
 
     button.click()
   })
+
+  it('submits nested fields into objects', function(done) {
+    const form = document.createElement('form')
+    form.setAttribute('enctype', 'application/json')
+    form.setAttribute('method', 'POST')
+    form.setAttribute('action', '/submit')
+
+    const input = document.createElement('input')
+    input.name = 'user[name]'
+    input.value = 'bob'
+    form.appendChild(input)
+
+    const button = document.createElement('button')
+    button.type = 'submit'
+    form.appendChild(button)
+
+    document.body.appendChild(form)
+    up.hello(form)
+
+    spyOn(up, 'submit').and.callFake(function(submittedForm, options) {
+      expect(JSON.parse(options.body)).toEqual({ user: { name: 'bob' } })
+      done()
+    })
+
+    button.click()
+  })
+
+  it('submits deeply nested fields', function(done) {
+    const form = document.createElement('form')
+    form.setAttribute('enctype', 'application/json')
+    form.setAttribute('method', 'POST')
+    form.setAttribute('action', '/submit')
+
+    const input = document.createElement('input')
+    input.type = 'number'
+    input.name = 'user[details][age]'
+    input.value = '42'
+    form.appendChild(input)
+
+    const button = document.createElement('button')
+    button.type = 'submit'
+    form.appendChild(button)
+
+    document.body.appendChild(form)
+    up.hello(form)
+
+    spyOn(up, 'submit').and.callFake(function(submittedForm, options) {
+      expect(JSON.parse(options.body)).toEqual({ user: { details: { age: 42 } } })
+      done()
+    })
+
+    button.click()
+  })
+
+  it('submits multiple array fields into array', function(done) {
+    const form = document.createElement('form')
+    form.setAttribute('enctype', 'application/json')
+    form.setAttribute('method', 'POST')
+    form.setAttribute('action', '/submit')
+
+    const item1 = document.createElement('input')
+    item1.name = 'items[]'
+    item1.value = 'apple'
+
+    const item2 = document.createElement('input')
+    item2.name = 'items[]'
+    item2.value = 'banana'
+
+    form.appendChild(item1)
+    form.appendChild(item2)
+
+    const button = document.createElement('button')
+    button.type = 'submit'
+    form.appendChild(button)
+
+    document.body.appendChild(form)
+    up.hello(form)
+
+    spyOn(up, 'submit').and.callFake(function(submittedForm, options) {
+      expect(JSON.parse(options.body)).toEqual({ items: ['apple', 'banana'] })
+      done()
+    })
+
+    button.click()
+  })
 })
