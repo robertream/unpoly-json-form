@@ -8,11 +8,21 @@ function parseFormElements(form) {
 
   for (let element of elements) {
     if (!element.name || element.disabled) continue
-  
-    if (element.tagName.toLowerCase() === 'select' && element.value.trim() === '') continue
-  
+
+    if (element.tagName.toLowerCase() === 'select' && element.multiple) {
+      const selectedOptions = Array.from(element.options).filter(o => o.selected && o.value.trim() !== '')
+      if (selectedOptions.length === 0) continue
+      const values = selectedOptions.map(o => o.value)
+      assignField(formData, element.name, values)
+      continue
+    }
+
+    if (element.tagName.toLowerCase() === 'select' && element.value.trim() === '') {
+      continue
+    }
+
     let value = element.value
-  
+
     if (element.type === 'checkbox') {
       if (!element.checked) continue
       value = true
@@ -24,7 +34,7 @@ function parseFormElements(form) {
     } else if (['text', 'textarea', 'email', 'password', 'search', 'tel', 'url'].includes(element.type)) {
       value = value
     }
-  
+
     assignField(formData, element.name, value)
   }  
 
