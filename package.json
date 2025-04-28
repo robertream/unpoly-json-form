@@ -3,14 +3,17 @@
   "version": "0.1.0",
   "description": "An Unpoly extension for submitting HTML forms as JSON.",
   "scripts": {
-    "test": "npx jasmine spec/**/*.spec.js"
+    "test": "karma start --single-run"
   },
   "peerDependencies": {
     "unpoly": "^3.0.0"
   },
   "devDependencies": {
-    "unpoly": "^3.0.0",
-    "jasmine": "^5.7.0"
+    "jasmine": "^5.7.0",
+    "karma": "^6.4.4",
+    "karma-chrome-launcher": "^3.2.0",
+    "karma-jasmine": "^5.1.0",
+    "unpoly": "^3.0.0"
   },
   "license": "MIT"
 }
