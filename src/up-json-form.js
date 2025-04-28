@@ -1,7 +1,7 @@
 // unpoly-json-form extension
 // Handles application/json form submissions
 
-function parseFormElements(form) {
+async function parseFormElements(form) {
   const formData = {}
 
   const elements = form.elements
@@ -35,10 +35,35 @@ function parseFormElements(form) {
       value = value
     }
 
+    if (element.type === 'file') {
+      const enctype = element.getAttribute('enctype')
+      if (enctype === 'application/base64' || enctype === 'application/octet-stream') {
+        if (element.files.length === 0) continue
+        const files = Array.from(element.files)
+        const fileObjects = await Promise.all(files.map(file => serializeFile(file, enctype)))
+        formData[element.name] = (element.multiple) ? fileObjects : fileObjects[0]
+      }
+      continue // Always continue after file input (even if not serialized)
+    }
+
     assignField(formData, element.name, value)
-  }  
+  }
 
   return formData
+}
+
+async function serializeFile(file, enctype) {
+  const arrayBuffer = await file.arrayBuffer()
+  const binaryString = new Uint8Array(arrayBuffer).reduce((acc, byte) => acc + String.fromCharCode(byte), '')
+  const base64String = btoa(binaryString)
+
+  return {
+    name: file.name,
+    type: file.type,
+    size: file.size,
+    enctype: enctype,
+    content: base64String
+  }
 }
 
 function assignField(obj, name, value) {
@@ -89,10 +114,10 @@ function assignField(obj, name, value) {
 }
 
 up.compiler('form[enctype="application/json"]', function(form) {
-  form.addEventListener('submit', function(event) {
+  form.addEventListener('submit', async function(event) {
     event.preventDefault()
 
-    const jsonBody = parseFormElements(form)
+    const jsonBody = await parseFormElements(form)
 
     up.submit(form, {
       headers: {
@@ -100,5 +125,49 @@ up.compiler('form[enctype="application/json"]', function(form) {
       },
       body: JSON.stringify(jsonBody)
     })
+  })
+})
+
+up.compiler('form[enctype="application/json"]', function(form) {
+  const DEFAULT_FORM_SIZE_LIMIT = 10 * 1024 * 1024
+
+  form.addEventListener('change', function(event) {
+    if (event.target.type !== 'file') return
+
+    const limitAttr = form.getAttribute('up-form-size-limit')
+    const sizeLimit = limitAttr ? parseInt(limitAttr, 10) : DEFAULT_FORM_SIZE_LIMIT
+    if (isNaN(sizeLimit) || sizeLimit <= 0) {
+      console.warn('Invalid up-form-size-limit attribute; using default 10MB')
+      return
+    }
+
+    const fileInputs = form.querySelectorAll('input[type="file"]')
+    let totalSize = 0
+    for (const input of fileInputs) {
+      if (input === event.target) {
+        // Skip the changed input for now; we'll validate it separately below
+        continue
+      }
+      for (const file of input.files) {
+        totalSize += file.size
+      }
+    }
+
+    let newFilesSize = 0
+    for (const file of event.target.files) {
+      newFilesSize += file.size
+    }
+
+    if ((totalSize + newFilesSize) > sizeLimit) {
+      // Reject this input's files
+      event.target.value = ''
+
+      // Emit file size error event
+      up.emit(form, 'up:form:fileSizeExceeded', {
+        target: event.target,
+        totalSize: totalSize + newFilesSize,
+        maxSize: sizeLimit
+      })
+    }
   })
 })
