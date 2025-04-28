@@ -8,16 +8,25 @@ function parseFormElements(form) {
 
   for (let element of elements) {
     if (!element.name || element.disabled) continue
-
+  
+    if (element.tagName.toLowerCase() === 'select' && element.value.trim() === '') continue
+  
     let value = element.value
-    if (element.type === 'number') {
-      value = (value === '') ? null : Number(value)
-    } else if (element.type === 'checkbox' || element.type === 'radio') {
-      value = element.checked
+  
+    if (element.type === 'checkbox') {
+      if (!element.checked) continue
+      value = true
+    } else if (element.type === 'radio') {
+      if (!element.checked) continue
+      value = value
+    } else if (element.type === 'number') {
+      value = (value.trim() === '') ? null : Number(value)
+    } else if (['text', 'textarea', 'email', 'password', 'search', 'tel', 'url'].includes(element.type)) {
+      value = value
     }
-
+  
     assignField(formData, element.name, value)
-  }
+  }  
 
   return formData
 }

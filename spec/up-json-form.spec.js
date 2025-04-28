@@ -291,6 +291,41 @@ describe('up-json-form', function() {
     button.click()
   })
 
+  it('submits value of checked radio button', function(done) {
+    const form = document.createElement('form')
+    form.setAttribute('enctype', 'application/json')
+    form.setAttribute('method', 'POST')
+    form.setAttribute('action', '/submit')
+  
+    const radio1 = document.createElement('input')
+    radio1.type = 'radio'
+    radio1.name = 'gender'
+    radio1.value = 'male'
+  
+    const radio2 = document.createElement('input')
+    radio2.type = 'radio'
+    radio2.name = 'gender'
+    radio2.value = 'female'
+    radio2.checked = true
+  
+    form.appendChild(radio1)
+    form.appendChild(radio2)
+  
+    const button = document.createElement('button')
+    button.type = 'submit'
+    form.appendChild(button)
+  
+    document.body.appendChild(form)
+    up.hello(form)
+  
+    spyOn(up, 'submit').and.callFake(function(submittedForm, options) {
+      expect(JSON.parse(options.body)).toEqual({ gender: 'female' })
+      done()
+    })
+  
+    button.click()
+  })
+
   it('skips unchecked radio button', function(done) {
     const form = document.createElement('form')
     form.setAttribute('enctype', 'application/json')
@@ -317,7 +352,96 @@ describe('up-json-form', function() {
 
     button.click()
   })
+  
+  it('submits value of selected option in select', function(done) {
+    const form = document.createElement('form')
+    form.setAttribute('enctype', 'application/json')
+    form.setAttribute('method', 'POST')
+    form.setAttribute('action', '/submit')
+  
+    const select = document.createElement('select')
+    select.name = 'color'
+  
+    const option1 = document.createElement('option')
+    option1.value = ''
+    option1.textContent = 'Choose...'
+  
+    const option2 = document.createElement('option')
+    option2.value = 'red'
+    option2.textContent = 'Red'
+    option2.selected = true
+  
+    select.appendChild(option1)
+    select.appendChild(option2)
+    form.appendChild(select)
+  
+    const button = document.createElement('button')
+    button.type = 'submit'
+    form.appendChild(button)
+  
+    document.body.appendChild(form)
+    up.hello(form)
+  
+    spyOn(up, 'submit').and.callFake(function(submittedForm, options) {
+      expect(JSON.parse(options.body)).toEqual({ color: 'red' })
+      done()
+    })
+  
+    button.click()
+  })
+  
+  it('skips empty select', function(done) {
+    const form = document.createElement('form')
+    form.setAttribute('enctype', 'application/json')
+    form.setAttribute('method', 'POST')
+    form.setAttribute('action', '/submit')
 
+    const select = document.createElement('select')
+    select.name = 'color'
+    form.appendChild(select)
+
+    const button = document.createElement('button')
+    button.type = 'submit'
+    form.appendChild(button)
+
+    document.body.appendChild(form)
+    up.hello(form)
+
+    spyOn(up, 'submit').and.callFake(function(submittedForm, options) {
+      expect(JSON.parse(options.body)).toEqual({  })
+      done()
+    })
+
+    button.click()
+  })
+  
+  it('submits hidden inputs normally', function(done) {
+    const form = document.createElement('form')
+    form.setAttribute('enctype', 'application/json')
+    form.setAttribute('method', 'POST')
+    form.setAttribute('action', '/submit')
+  
+    const input = document.createElement('input')
+    input.type = 'hidden'
+    input.name = 'csrf_token'
+    input.value = 'abcdef123456'
+    form.appendChild(input)
+  
+    const button = document.createElement('button')
+    button.type = 'submit'
+    form.appendChild(button)
+  
+    document.body.appendChild(form)
+    up.hello(form)
+  
+    spyOn(up, 'submit').and.callFake(function(submittedForm, options) {
+      expect(JSON.parse(options.body)).toEqual({ csrf_token: 'abcdef123456' })
+      done()
+    })
+  
+    button.click()
+  })
+  
   it('skips disabled form fields', function(done) {
     const form = document.createElement('form')
     form.setAttribute('enctype', 'application/json')
@@ -350,5 +474,123 @@ describe('up-json-form', function() {
     })
   
     button.click()
-  })  
+  })
+
+  it('skips inputs without a name attribute', function(done) {
+    const form = document.createElement('form')
+    form.setAttribute('enctype', 'application/json')
+    form.setAttribute('method', 'POST')
+    form.setAttribute('action', '/submit')
+  
+    const input = document.createElement('input')
+    input.type = 'text'
+    input.value = 'should be skipped'
+    form.appendChild(input)
+  
+    const button = document.createElement('button')
+    button.type = 'submit'
+    form.appendChild(button)
+  
+    document.body.appendChild(form)
+    up.hello(form)
+  
+    spyOn(up, 'submit').and.callFake(function(submittedForm, options) {
+      expect(JSON.parse(options.body)).toEqual({})
+      done()
+    })
+  
+    button.click()
+  })
+
+  it('submits empty string for empty text input', function(done) {
+    const form = document.createElement('form')
+    form.setAttribute('enctype', 'application/json')
+    form.setAttribute('method', 'POST')
+    form.setAttribute('action', '/submit')
+  
+    const input = document.createElement('input')
+    input.type = 'text'
+    input.name = 'nickname'
+    input.value = ''
+    form.appendChild(input)
+  
+    const button = document.createElement('button')
+    button.type = 'submit'
+    form.appendChild(button)
+  
+    document.body.appendChild(form)
+    up.hello(form)
+  
+    spyOn(up, 'submit').and.callFake(function(submittedForm, options) {
+      expect(JSON.parse(options.body)).toEqual({ nickname: '' })
+      done()
+    })
+  
+    button.click()
+  })
+
+  it('submits empty string for empty textarea', function(done) {
+    const form = document.createElement('form')
+    form.setAttribute('enctype', 'application/json')
+    form.setAttribute('method', 'POST')
+    form.setAttribute('action', '/submit')
+
+    const textarea = document.createElement('textarea')
+    textarea.name = 'bio'
+    textarea.value = ''
+    form.appendChild(textarea)
+
+    const button = document.createElement('button')
+    button.type = 'submit'
+    form.appendChild(button)
+
+    document.body.appendChild(form)
+    up.hello(form)
+
+    spyOn(up, 'submit').and.callFake(function(submittedForm, options) {
+      expect(JSON.parse(options.body)).toEqual({ bio: '' })
+      done()
+    })
+
+    button.click()
+  })
+  
+  it('submits empty string for empty text-like inputs', function(done) {
+    const form = document.createElement('form')
+    form.setAttribute('enctype', 'application/json')
+    form.setAttribute('method', 'POST')
+    form.setAttribute('action', '/submit')
+  
+    const types = ['text', 'textarea', 'email', 'password', 'search', 'tel', 'url']
+    const expected = {}
+  
+    for (const type of types) {
+      let input
+      if (type === 'textarea') {
+        input = document.createElement('textarea')
+      } else {
+        input = document.createElement('input')
+        input.type = type
+      }
+      input.name = type
+      input.value = ''
+      form.appendChild(input)
+  
+      expected[type] = ''
+    }
+  
+    const button = document.createElement('button')
+    button.type = 'submit'
+    form.appendChild(button)
+  
+    document.body.appendChild(form)
+    up.hello(form)
+  
+    spyOn(up, 'submit').and.callFake(function(submittedForm, options) {
+      expect(JSON.parse(options.body)).toEqual(expected)
+      done()
+    })
+  
+    button.click()
+  })
 })
