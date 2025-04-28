@@ -922,4 +922,33 @@ describe('up-json-form', function() {
       done()
     }, 50)
   })
+
+  it('skips fields inside a disabled fieldset', function(done) {
+    const form = document.createElement('form')
+    form.setAttribute('enctype', 'application/json')
+    form.setAttribute('method', 'POST')
+    form.setAttribute('action', '/submit')
+
+    const input = document.createElement('input')
+    input.name = 'should_be_skipped'
+    input.value = 'value'
+
+    const fieldset = document.createElement('fieldset')
+    fieldset.disabled = true
+    fieldset.appendChild(input)
+    form.appendChild(fieldset)
+
+    const button = document.createElement('button')
+    button.type = 'submit'
+    form.appendChild(button)
+    document.body.appendChild(form)
+    up.hello(form)
+
+    spyOn(up, 'submit').and.callFake(function(submittedForm, options) {
+      expect(JSON.parse(options.body)).toEqual({})
+      done()
+    })
+
+    button.click()
+  })
 })

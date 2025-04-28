@@ -7,7 +7,7 @@ async function parseFormElements(form) {
   const elements = form.elements
 
   for (let element of elements) {
-    if (!element.name || element.disabled) continue
+    if (!element.name || element.disabled || element.closest('fieldset:disabled')) continue
 
     if (element.tagName.toLowerCase() === 'select' && element.multiple) {
       const selectedOptions = Array.from(element.options).filter(o => o.selected && o.value.trim() !== '')
