@@ -2,8 +2,9 @@ module.exports = function(config) {
   config.set({
     frameworks: ['jasmine'],
     files: [
-      'spec/**/*.spec.js',
-      'src/**/*.js'
+      'node_modules/unpoly/unpoly.js',
+      'src/**/*.js',
+      'spec/**/*.spec.js'
     ],
     browsers: ['ChromeHeadlessNoSandbox'],
     customLaunchers: {
@@ -13,6 +14,9 @@ module.exports = function(config) {
       }
     },
     singleRun: true,
-    concurrency: Infinity
+    concurrency: 1,
+    client: {
+      clearContext: false
+    }
   })
 }
