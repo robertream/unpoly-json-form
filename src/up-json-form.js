@@ -78,7 +78,7 @@ function uint8ArrayToBase64(uint8Array) {
   let result = '';
   for (let i = 0; i < uint8Array.length; i += CHUNK_SIZE) {
     const chunk = uint8Array.subarray(i, i + CHUNK_SIZE);
-    result += String.fromCharCode.apply(null, chunk);
+    result += String.fromCharCode(...chunk)
   }
   return btoa(result);
 }
