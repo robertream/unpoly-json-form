@@ -1,60 +1,74 @@
-// unpoly-json-form extension
-// Handles application/json form submissions
-
 async function parseFormElements(form) {
   const formData = {}
   const elements = form.elements
 
   for (let element of elements) {
-    if (!element.name || element.disabled || element.closest('fieldset:disabled')) continue
-    switch (element.tagName.toLowerCase()) {
-      case 'textarea':
-        assignField(formData, element.name, element.value)
-        continue
-      case 'select':
-        if (element.multiple) {
-          const selectedOptions = Array.from(element.options).filter(o => o.selected && o.value.trim() !== '')
-          if (selectedOptions.length === 0) continue
-          const values = selectedOptions.map(o => o.value)
-          assignField(formData, element.name, values)
-        } else if (element.value.trim() !== '') {
-          assignField(formData, element.name, element.value)
-        }
-        continue
-      default:
-        switch (element.type) {
-          case 'checkbox':
-            if (!element.checked) continue
-            assignField(formData, element.name, true)
-            continue
-          case 'radio':
-            if (!element.checked) continue
-            assignField(formData, element.name, element.value)
-            continue
-          case 'number':
-            assignField(formData, element.name, (element.value.trim() === '') ? null : Number(element.value))
-            continue
-          case 'text', 'email', 'password', 'search', 'tel', 'url', 'hidden':
-            assignField(formData, element.name, element.value)
-            continue
-          case 'file':
-          default:
-        }
-        let value = element.value
-        if (element.type === 'file') {
-          const enctype = element.getAttribute('enctype')
-          if (enctype === 'application/base64' || enctype === 'application/octet-stream') {
-            if (element.files.length === 0) continue
-            const files = Array.from(element.files)
-            const fileObjects = await Promise.all(files.map(file => serializeFile(file, enctype)))
-            assignField(formData, element.name, element.multiple ? fileObjects : fileObjects[0])
-          }
-          continue
-        }
-        assignField(formData, element.name, value)
+    let value = await getElementValue(element)
+    if (value != null) {
+      assignField(formData, element.name, value)
     }
   }
   return formData
+}
+
+async function getElementValue(element) {
+  if (!element.name || element.disabled || element.closest('fieldset:disabled')) return null      
+  switch (element.tagName.toLowerCase()) {
+    case 'textarea':
+      return element.value
+    case 'select':
+      return getSelectValue(element)
+    default:
+      return getInputValue(element)
+  }
+}
+
+function getSelectValue(element) {
+  if (element.multiple) {
+    const selectedOptions = Array.from(element.options).filter(o => o.selected && o.value.trim() !== '')
+    if (selectedOptions.length === 0) return null
+    const values = selectedOptions.map(o => o.value)
+    return values
+  } else if (element.value.trim() !== '') {
+    return element.value
+  }
+}
+
+async function getInputValue(element) {
+  switch (element.type) {
+    case 'checkbox':
+      return (element.checked) ? true : null
+    case 'radio':
+      return (element.checked) ? element.value : null
+    case 'number':
+      return (element.value.trim() === '') ? null : Number(element.value)
+    case 'file':
+      return getFileInputValue(element)
+    case 'text':
+    case 'email':
+    case 'password':
+    case 'search':
+    case 'tel':
+    case 'url':
+    case 'hidden':
+      return element.value
+    default:
+      return element.value
+  }
+}
+
+async function getFileInputValue(element) {
+  const enctype = element.getAttribute('enctype')
+  switch (enctype) {
+    case 'application/base64':
+    case 'application/octet-stream':
+      if (element.files.length === 0) return null
+      const files = Array.from(element.files)
+      const fileObjects = await Promise.all(files.map(file => serializeFile(file, enctype)))
+      return element.multiple ? fileObjects : fileObjects[0]
+    default:
+      return null
+  }
 }
 
 function uint8ArrayToBase64(uint8Array) {

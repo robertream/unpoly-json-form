@@ -309,6 +309,8 @@ describe('up-json-form', function() {
   })
 })
 
+// Helper functions
+
 function createForm(children = [], attributes = {}) {
   attributes.children = children
 
