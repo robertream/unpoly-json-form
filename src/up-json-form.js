@@ -74,28 +74,28 @@ async function getFileInputValue(element) {
 }
 
 function uint8ArrayToBase64(uint8Array) {
-  const CHUNK_SIZE = 0x8000; // 32KB per chunk
-  let result = '';
+  const CHUNK_SIZE = 0x8000
+  let result = ''
   for (let i = 0; i < uint8Array.length; i += CHUNK_SIZE) {
-    const chunk = uint8Array.subarray(i, i + CHUNK_SIZE);
+    const chunk = uint8Array.subarray(i, i + CHUNK_SIZE)
     result += String.fromCharCode(...chunk)
   }
-  return btoa(result);
+  return btoa(result)
 }
 
 async function serializeFile(file, enctype) {
-  const arrayBuffer = await file.arrayBuffer();
-  const uint8Array = new Uint8Array(arrayBuffer);
+  const arrayBuffer = await file.arrayBuffer()
+  const uint8Array = new Uint8Array(arrayBuffer)
 
   if (enctype === 'application/base64') {
-    const base64String = uint8ArrayToBase64(uint8Array);
+    const base64String = uint8ArrayToBase64(uint8Array)
     return {
       name: file.name,
       type: file.type,
       size: file.size,
       enctype,
       content: base64String
-    };
+    }
   } else if (enctype === 'application/octet-stream') {
     return {
       name: file.name,
@@ -103,56 +103,56 @@ async function serializeFile(file, enctype) {
       size: file.size,
       enctype,
       content: Array.from(uint8Array)
-    };
+    }
   }
 }
 function assignField(obj, name, value) {
-  const path = parseFormNamePath(name);
-  setNestedValue(obj, path, value);
+  const path = parseFormNamePath(name)
+  setNestedValue(obj, path, value)
 }
 
 function parseFormNamePath(name) {
-  const path = [];
+  const path = []
   name.replace(/\[([^\]]*)\]/g, (_, inner) => {
-    path.push(inner);
-    return '';
-  });
-  const firstBracket = name.indexOf('[');
-  const base = firstBracket === -1 ? name : name.substring(0, firstBracket);
-  path.unshift(base);
-  return path;
+    path.push(inner)
+    return ''
+  })
+  const firstBracket = name.indexOf('[')
+  const base = firstBracket === -1 ? name : name.substring(0, firstBracket)
+  path.unshift(base)
+  return path
 }
 
 function setNestedValue(obj, path, value) {
-  let current = obj;
+  let current = obj
 
   for (let i = 0; i < path.length; i++) {
-    const part = path[i];
-    const next = path[i + 1];
+    const part = path[i]
+    const next = path[i + 1]
 
-    const isLast = i === path.length - 1;
+    const isLast = i === path.length - 1
 
     if (isLast) {
       if (part === '') {
-        if (!Array.isArray(current)) current = [];
-        current.push(value);
+        if (!Array.isArray(current)) current = []
+        current.push(value)
       } else if (current[part] === undefined) {
-        current[part] = value;
+        current[part] = value
       } else if (Array.isArray(current[part])) {
-        current[part].push(value);
+        current[part].push(value)
       } else {
-        current[part] = [current[part], value];
+        current[part] = [current[part], value]
       }
     } else {
       if (part === '') {
-        if (!Array.isArray(current)) current = [];
-        if (!current[current.length - 1]) current.push({});
-        current = current[current.length - 1];
+        if (!Array.isArray(current)) current = []
+        if (!current[current.length - 1]) current.push({})
+        current = current[current.length - 1]
       } else {
         if (current[part] === undefined) {
-          current[part] = (next === '' || /^\d+$/.test(next)) ? [] : {};
+          current[part] = (next === '' || /^\d+$/.test(next)) ? [] : {}
         }
-        current = current[part];
+        current = current[part]
       }
     }
   }

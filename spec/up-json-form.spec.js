@@ -185,17 +185,17 @@ describe('up-json-form', function() {
   })
 
   it('submits textarea', function(done) {
-    const textarea = createElement('textarea', { name: 'message', value: 'Hello World' });
-    const { button } = createForm([textarea]);
-    expectSubmittedJson({ message: 'Hello World' }, done);
-    button.click();
+    const textarea = createElement('textarea', { name: 'message', value: 'Hello World' })
+    const { button } = createForm([textarea])
+    expectSubmittedJson({ message: 'Hello World' }, done)
+    button.click()
   })
 
   it('submits empty string for empty textarea', function(done) {
-    const textarea = createElement('textarea', { name: 'text' });
-    const { button } = createForm([textarea]);
-    expectSubmittedJson({ text: '' }, done);
-    button.click();
+    const textarea = createElement('textarea', { name: 'text' })
+    const { button } = createForm([textarea])
+    expectSubmittedJson({ text: '' }, done)
+    button.click()
   })
 
   it('skip file inputs without explicit enctype', function(done) {
@@ -392,28 +392,30 @@ function createSelect(attributes = {}) {
 }
 
 function createFileInput(attributes = {}) {
-  attributes.type = 'file';
-  let files;
+  attributes.type = 'file'
+  let files
   if (attributes.files) {
-    files = attributes.files.map(file => {
-      if (typeof file.data === 'string') {
-        return new File([new TextEncoder().encode(file.data)], file.name, { type: 'text/plain' })
-      } else if (Array.isArray(file.data)) {
-        return new File([new Uint8Array(file.data)], file.name, { type: 'application/octet-stream' });
-      } else if (file.data instanceof Uint8Array) {
-        return new File([file.data], file.name, { type: 'application/octet-stream' });
-      } else {
-        throw new Error(`Unsupported data type for file "${file.name}": ${typeof file.data}`);
-      }
-    });
+    files = attributes.files.map(createFile)
     if (files.length > 1) {
-      attributes.multiple = true;
+      attributes.multiple = true
     }
-    delete attributes.files;
+    delete attributes.files
   }
-  const input = createElement('input', attributes);
+  const input = createElement('input', attributes)
   if (files) {
-    Object.defineProperty(input, 'files', { value: files });
+    Object.defineProperty(input, 'files', { value: files })
   }
-  return input;
+  return input
+}
+
+function createFile(file) {
+  if (typeof file.data === 'string') {
+    return new File([new TextEncoder().encode(file.data)], file.name, { type: 'text/plain' })
+  } else if (Array.isArray(file.data)) {
+    return new File([new Uint8Array(file.data)], file.name, { type: 'application/octet-stream' })
+  } else if (file.data instanceof Uint8Array) {
+    return new File([file.data], file.name, { type: 'application/octet-stream' })
+  } else {
+    throw new Error(`Unsupported data type for file "${file.name}": ${typeof file.data}`)
+  }
 }
