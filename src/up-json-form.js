@@ -106,72 +106,60 @@ async function serializeFile(file, enctype) {
     };
   }
 }
-
 function assignField(obj, name, value) {
-  const parts = []
+  const path = parseFormNamePath(name);
+  setNestedValue(obj, path, value);
+}
+
+function parseFormNamePath(name) {
+  const path = [];
   name.replace(/\[([^\]]*)\]/g, (_, inner) => {
-    parts.push(inner)
-    return ''
-  })
-  const firstBracket = name.indexOf('[')
-  const base = firstBracket === -1 ? name : name.substring(0, firstBracket)
-  parts.unshift(base)
+    path.push(inner);
+    return '';
+  });
+  const firstBracket = name.indexOf('[');
+  const base = firstBracket === -1 ? name : name.substring(0, firstBracket);
+  path.unshift(base);
+  return path;
+}
 
-  let current = obj
-  for (let i = 0; i < parts.length; i++) {
-    const part = parts[i]
-    const nextPart = parts[i + 1]
+function setNestedValue(obj, path, value) {
+  let current = obj;
 
-    if (i === parts.length - 1) {
+  for (let i = 0; i < path.length; i++) {
+    const part = path[i];
+    const next = path[i + 1];
+
+    const isLast = i === path.length - 1;
+
+    if (isLast) {
       if (part === '') {
-        if (!Array.isArray(current)) {
-          current = []
-        }
-        current.push(value)
+        if (!Array.isArray(current)) current = [];
+        current.push(value);
       } else if (current[part] === undefined) {
-        current[part] = value
+        current[part] = value;
       } else if (Array.isArray(current[part])) {
-        current[part].push(value)
+        current[part].push(value);
       } else {
-        current[part] = [current[part], value]
+        current[part] = [current[part], value];
       }
     } else {
       if (part === '') {
-        if (!Array.isArray(current)) {
-          current = []
-        }
-        if (!current[current.length - 1]) {
-          current.push({})
-        }
-        current = current[current.length - 1]
+        if (!Array.isArray(current)) current = [];
+        if (!current[current.length - 1]) current.push({});
+        current = current[current.length - 1];
       } else {
         if (current[part] === undefined) {
-          current[part] = (nextPart === '' || /^\d+$/.test(nextPart)) ? [] : {}
+          current[part] = (next === '' || /^\d+$/.test(next)) ? [] : {};
         }
-        current = current[part]
+        current = current[part];
       }
     }
   }
 }
 
+const DEFAULT_FORM_SIZE_LIMIT = 10 * 1024 * 1024
 up.compiler('form[enctype="application/json"]', function(form) {
-  form.addEventListener('submit', async function(event) {
-    event.preventDefault()
-
-    const jsonBody = await parseFormElements(form)
-
-    up.submit(form, {
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(jsonBody)
-    })
-  })
-})
-
-up.compiler('form[enctype="application/json"]', function(form) {
-  const DEFAULT_FORM_SIZE_LIMIT = 10 * 1024 * 1024
-
   form.addEventListener('change', function(event) {
     if (event.target.type !== 'file') return
 
@@ -204,5 +192,16 @@ up.compiler('form[enctype="application/json"]', function(form) {
         maxSize: sizeLimit
       })
     }
+  })
+
+  form.addEventListener('submit', async function(event) {
+    event.preventDefault()
+    const jsonBody = await parseFormElements(form)
+    up.submit(form, {
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(jsonBody)
+    })
   })
 })
