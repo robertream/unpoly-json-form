@@ -18,8 +18,10 @@ async function getElementValue(element) {
       return element.value
     case 'select':
       return getSelectValue(element)
-    default:
+    case 'input':
       return getInputValue(element)
+    default:
+      return null
   }
 }
 
