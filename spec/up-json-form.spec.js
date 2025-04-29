@@ -184,11 +184,18 @@ describe('up-json-form', function() {
     button.click()
   })
 
+  it('submits textarea', function(done) {
+    const textarea = createElement('textarea', { name: 'message', value: 'Hello World' });
+    const { button } = createForm([textarea]);
+    expectSubmittedJson({ message: 'Hello World' }, done);
+    button.click();
+  })
+
   it('submits empty string for empty textarea', function(done) {
-    const textarea = createElement('input', { type: 'textarea', name: 'text' })
-    const { button } = createForm([textarea])
-    expectSubmittedJson({ text: ""}, done)
-    button.click()
+    const textarea = createElement('textarea', { name: 'text' });
+    const { button } = createForm([textarea]);
+    expectSubmittedJson({ text: '' }, done);
+    button.click();
   })
 
   it('skips file inputs without explicit enctype', function(done) {
@@ -336,7 +343,19 @@ function createElement(tagName, attributes = {}) {
   delete attributes.children
   for (const [key, value] of Object.entries(attributes)) {
     if (value === undefined) continue
-    el.setAttribute(key, value)
+    switch (key) {
+      case 'value':
+        el.value = value
+        break
+      case 'checked':
+        el.checked = value
+        break
+      case 'selected':
+        el.selected = value
+        break
+      default:
+        el.setAttribute(key, value)
+    }
   }
   if (children) {
     for (const child of children) {

@@ -7,47 +7,53 @@ async function parseFormElements(form) {
 
   for (let element of elements) {
     if (!element.name || element.disabled || element.closest('fieldset:disabled')) continue
-
-    if (element.tagName.toLowerCase() === 'select' && element.multiple) {
-      const selectedOptions = Array.from(element.options).filter(o => o.selected && o.value.trim() !== '')
-      if (selectedOptions.length === 0) continue
-      const values = selectedOptions.map(o => o.value)
-      assignField(formData, element.name, values)
-      continue
+    switch (element.tagName.toLowerCase()) {
+      case 'textarea':
+        assignField(formData, element.name, element.value)
+        continue
+      case 'select':
+        if (element.multiple) {
+          const selectedOptions = Array.from(element.options).filter(o => o.selected && o.value.trim() !== '')
+          if (selectedOptions.length === 0) continue
+          const values = selectedOptions.map(o => o.value)
+          assignField(formData, element.name, values)
+        } else if (element.value.trim() !== '') {
+          assignField(formData, element.name, element.value)
+        }
+        continue
+      default:
+        switch (element.type) {
+          case 'checkbox':
+            if (!element.checked) continue
+            assignField(formData, element.name, true)
+            continue
+          case 'radio':
+            if (!element.checked) continue
+            assignField(formData, element.name, element.value)
+            continue
+          case 'number':
+            assignField(formData, element.name, (element.value.trim() === '') ? null : Number(element.value))
+            continue
+          case 'text', 'email', 'password', 'search', 'tel', 'url', 'hidden':
+            assignField(formData, element.name, element.value)
+            continue
+          case 'file':
+          default:
+        }
+        let value = element.value
+        if (element.type === 'file') {
+          const enctype = element.getAttribute('enctype')
+          if (enctype === 'application/base64' || enctype === 'application/octet-stream') {
+            if (element.files.length === 0) continue
+            const files = Array.from(element.files)
+            const fileObjects = await Promise.all(files.map(file => serializeFile(file, enctype)))
+            assignField(formData, element.name, element.multiple ? fileObjects : fileObjects[0])
+          }
+          continue
+        }
+        assignField(formData, element.name, value)
     }
-
-    if (element.tagName.toLowerCase() === 'select' && element.value.trim() === '') {
-      continue
-    }
-
-    let value = element.value
-
-    if (element.type === 'checkbox') {
-      if (!element.checked) continue
-      value = true
-    } else if (element.type === 'radio') {
-      if (!element.checked) continue
-      value = value
-    } else if (element.type === 'number') {
-      value = (value.trim() === '') ? null : Number(value)
-    } else if (element.type === 'textarea' || ['text', 'email', 'password', 'search', 'tel', 'url', 'hidden'].includes(element.type)) {
-      value = value
-    }
-
-    if (element.type === 'file') {
-      const enctype = element.getAttribute('enctype')
-      if (enctype === 'application/base64' || enctype === 'application/octet-stream') {
-        if (element.files.length === 0) continue
-        const files = Array.from(element.files)
-        const fileObjects = await Promise.all(files.map(file => serializeFile(file, enctype)))
-        assignField(formData, element.name, element.multiple ? fileObjects : fileObjects[0])
-      }
-      continue
-    }
-
-    assignField(formData, element.name, value)
   }
-
   return formData
 }
 
