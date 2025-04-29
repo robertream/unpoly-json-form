@@ -3,11 +3,10 @@
 
 async function parseFormElements(form) {
   const formData = {}
-
   const elements = form.elements
 
   for (let element of elements) {
-    if (!element.name || element.disabled) continue
+    if (!element.name || element.disabled || element.closest('fieldset:disabled')) continue
 
     if (element.tagName.toLowerCase() === 'select' && element.multiple) {
       const selectedOptions = Array.from(element.options).filter(o => o.selected && o.value.trim() !== '')
@@ -31,7 +30,7 @@ async function parseFormElements(form) {
       value = value
     } else if (element.type === 'number') {
       value = (value.trim() === '') ? null : Number(value)
-    } else if (['text', 'textarea', 'email', 'password', 'search', 'tel', 'url'].includes(element.type)) {
+    } else if (element.type === 'textarea' || ['text', 'email', 'password', 'search', 'tel', 'url', 'hidden'].includes(element.type)) {
       value = value
     }
 
@@ -41,9 +40,9 @@ async function parseFormElements(form) {
         if (element.files.length === 0) continue
         const files = Array.from(element.files)
         const fileObjects = await Promise.all(files.map(file => serializeFile(file, enctype)))
-        formData[element.name] = (element.multiple) ? fileObjects : fileObjects[0]
+        assignField(formData, element.name, element.multiple ? fileObjects : fileObjects[0])
       }
-      continue // Always continue after file input (even if not serialized)
+      continue
     }
 
     assignField(formData, element.name, value)
@@ -52,17 +51,37 @@ async function parseFormElements(form) {
   return formData
 }
 
-async function serializeFile(file, enctype) {
-  const arrayBuffer = await file.arrayBuffer()
-  const binaryString = new Uint8Array(arrayBuffer).reduce((acc, byte) => acc + String.fromCharCode(byte), '')
-  const base64String = btoa(binaryString)
+function uint8ArrayToBase64(uint8Array) {
+  const CHUNK_SIZE = 0x8000; // 32KB per chunk
+  let result = '';
+  for (let i = 0; i < uint8Array.length; i += CHUNK_SIZE) {
+    const chunk = uint8Array.subarray(i, i + CHUNK_SIZE);
+    result += String.fromCharCode.apply(null, chunk);
+  }
+  return btoa(result);
+}
 
-  return {
-    name: file.name,
-    type: file.type,
-    size: file.size,
-    enctype: enctype,
-    content: base64String
+async function serializeFile(file, enctype) {
+  const arrayBuffer = await file.arrayBuffer();
+  const uint8Array = new Uint8Array(arrayBuffer);
+
+  if (enctype === 'application/base64') {
+    const base64String = uint8ArrayToBase64(uint8Array);
+    return {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      enctype,
+      content: base64String
+    };
+  } else if (enctype === 'application/octet-stream') {
+    return {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      enctype,
+      content: Array.from(uint8Array)
+    };
   }
 }
 
@@ -144,10 +163,7 @@ up.compiler('form[enctype="application/json"]', function(form) {
     const fileInputs = form.querySelectorAll('input[type="file"]')
     let totalSize = 0
     for (const input of fileInputs) {
-      if (input === event.target) {
-        // Skip the changed input for now; we'll validate it separately below
-        continue
-      }
+      if (input === event.target) continue
       for (const file of input.files) {
         totalSize += file.size
       }
@@ -159,10 +175,7 @@ up.compiler('form[enctype="application/json"]', function(form) {
     }
 
     if ((totalSize + newFilesSize) > sizeLimit) {
-      // Reject this input's files
       event.target.value = ''
-
-      // Emit file size error event
       up.emit(form, 'up:form:fileSizeExceeded', {
         target: event.target,
         totalSize: totalSize + newFilesSize,
