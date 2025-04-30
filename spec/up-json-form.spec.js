@@ -5,7 +5,7 @@ describe('up-json-form', function() {
     button.click()
   })
 
-  it('submits a flat object for text input', function(done) {
+  it('submits text input fields as text', function(done) {
     const input = createElement('input', { type: 'text', name: 'username', value: 'bob' })
     const { button } = createForm([input])
     expectSubmittedJson({ username: 'bob' }, done)
@@ -26,14 +26,14 @@ describe('up-json-form', function() {
     button.click()
   })
 
-  it('skips an unchecked checkbox', function(done) {
+  it('skip an unchecked checkbox', function(done) {
     const input = createElement('input', { type: 'checkbox', name: 'subscribe' })
     const { button } = createForm([input])
     expectSubmittedJson({}, done)
     button.click()
   })
 
-  it('submits multiple fields correctly', function(done) {
+  it('submits multiple fields', function(done) {
     const inputs = [
       createElement('input', { type: 'text', name: 'username', value: 'alice' }),
       createElement('input', { type: 'number', name: 'age', value: '30' }),
@@ -44,14 +44,14 @@ describe('up-json-form', function() {
     button.click()
   })
 
-  it('submits nested fields into objects', function(done) {
+  it('submits nestedname path fields into nested objects', function(done) {
     const input = createElement('input', { type: 'text', name: 'user[name]', value: 'bob' })
     const { button } = createForm([input])
     expectSubmittedJson({ user: { name: 'bob' } }, done)
     button.click()
   })
 
-  it('submits deeply nested fields', function(done) {
+  it('submits deeply nested fields into deeply nested objects', function(done) {
     const input = createElement('input', { type: 'number', name: 'user[details][age]', value: '42' })
     const { button } = createForm([input])
     expectSubmittedJson({ user: { details: { age: 42 } } }, done)
@@ -70,8 +70,8 @@ describe('up-json-form', function() {
 
   it('submits multiple fields with the same name into an array', function(done) {
     const inputs = [
-      createElement('input', { type: 'text', name: 'tags[]', value: 'one' }),
-      createElement('input', { type: 'text', name: 'tags[]', value: 'two' })
+      createElement('input', { type: 'text', name: 'tags', value: 'one' }),
+      createElement('input', { type: 'text', name: 'tags', value: 'two' })
     ]
     const { button } = createForm(inputs)
     expectSubmittedJson({ tags: ['one', 'two'] }, done)
@@ -88,7 +88,7 @@ describe('up-json-form', function() {
     button.click()
   })
 
-  it('skips unchecked radio button', function(done) {
+  it('skip unchecked radio button', function(done) {
     const inputs = [
       createElement('input', { type: 'radio', name: 'gender', value: 'male' }),
       createElement('input', { type: 'radio', name: 'gender', value: 'female' })
@@ -108,7 +108,7 @@ describe('up-json-form', function() {
     button.click()
   })
 
-  it('skips empty select', function(done) {
+  it('skip empty select', function(done) {
     const select = createElement('select', { name: 'color' })
     const { button } = createForm([select])
     expectSubmittedJson({}, done)
@@ -136,7 +136,7 @@ describe('up-json-form', function() {
     button.click()
   })
 
-  it('skips select[multiple] with no selected options', function(done) {
+  it('skip select[multiple] with no selected options', function(done) {
     const select = createSelect({ name: 'hobbies', multiple: true, options: [
       { value: 'swimming' },
       { value: 'running' }
@@ -153,7 +153,7 @@ describe('up-json-form', function() {
     button.click()
   })
 
-  it('skips disabled form fields', function(done) {
+  it('skip disabled form fields', function(done) {
     const inputs = [
       createElement('input', { type: 'text', name: 'username', value: 'bob' }),
       createElement('input', { type: 'text', name: 'should_skip', disabled: true, value: 'nope' })
@@ -163,7 +163,7 @@ describe('up-json-form', function() {
     button.click()
   })
 
-  it('skips inputs without a name attribute', function(done) {
+  it('skip inputs without a name attribute', function(done) {
     const input = createElement('input', { type: 'hidden', name: 'csrf_token', value: 'abcdef123456' })
     const { button } = createForm([input])
     expectSubmittedJson({ csrf_token: 'abcdef123456' }, done)
@@ -184,14 +184,21 @@ describe('up-json-form', function() {
     button.click()
   })
 
-  it('submits empty string for empty textarea', function(done) {
-    const textarea = createElement('input', { type: 'textarea', name: 'text' })
+  it('submits textarea', function(done) {
+    const textarea = createElement('textarea', { name: 'message', value: 'Hello World' })
     const { button } = createForm([textarea])
-    expectSubmittedJson({ text: ""}, done)
+    expectSubmittedJson({ message: 'Hello World' }, done)
     button.click()
   })
 
-  it('skips file inputs without explicit enctype', function(done) {
+  it('submits empty string for empty textarea', function(done) {
+    const textarea = createElement('textarea', { name: 'text' })
+    const { button } = createForm([textarea])
+    expectSubmittedJson({ text: '' }, done)
+    button.click()
+  })
+
+  it('skip file inputs without explicit enctype', function(done) {
     const input = createFileInput({
       name: 'avatar',
       files: [{ name: 'hello.txt', data: 'Hello World' }]
@@ -292,7 +299,7 @@ describe('up-json-form', function() {
     }, 50)
   })
 
-  it('skips fields inside a disabled fieldset', function(done) {
+  it('skip fields inside a disabled fieldset', function(done) {
     const fieldset = createElement('fieldset', { disabled: true, children: [
       createElement('input', { type: 'text', name: 'insideFieldset', value: 'nope' })
     ]})
@@ -300,7 +307,21 @@ describe('up-json-form', function() {
     expectSubmittedJson({}, done)
     button.click()
   })
+
+  it('skip non-submittable form fields', function(done) {
+    const ignore = [
+      createElement('output', { name: 'output', value: 1 }),
+      createElement('progress', { name: 'progress', value: 2 }),
+      createElement('meter', { name: 'meter', value: 3 }),
+      createElement('datalist', { name: 'datalist', value: 4 }),
+    ]
+    const { button } = createForm(ignore)
+    expectSubmittedJson({}, done)
+    button.click()
+  })
 })
+
+// Helper functions
 
 function createForm(children = [], attributes = {}) {
   attributes.children = children
@@ -336,7 +357,19 @@ function createElement(tagName, attributes = {}) {
   delete attributes.children
   for (const [key, value] of Object.entries(attributes)) {
     if (value === undefined) continue
-    el.setAttribute(key, value)
+    switch (key) {
+      case 'value':
+        el.value = value
+        break
+      case 'checked':
+        el.checked = value
+        break
+      case 'selected':
+        el.selected = value
+        break
+      default:
+        el.setAttribute(key, value)
+    }
   }
   if (children) {
     for (const child of children) {
@@ -359,28 +392,30 @@ function createSelect(attributes = {}) {
 }
 
 function createFileInput(attributes = {}) {
-  attributes.type = 'file';
-  let files;
+  attributes.type = 'file'
+  let files
   if (attributes.files) {
-    files = attributes.files.map(file => {
-      if (typeof file.data === 'string') {
-        return new File([new TextEncoder().encode(file.data)], file.name, { type: 'text/plain' })
-      } else if (Array.isArray(file.data)) {
-        return new File([new Uint8Array(file.data)], file.name, { type: 'application/octet-stream' });
-      } else if (file.data instanceof Uint8Array) {
-        return new File([file.data], file.name, { type: 'application/octet-stream' });
-      } else {
-        throw new Error(`Unsupported data type for file "${file.name}": ${typeof file.data}`);
-      }
-    });
+    files = attributes.files.map(createFile)
     if (files.length > 1) {
-      attributes.multiple = true;
+      attributes.multiple = true
     }
-    delete attributes.files;
+    delete attributes.files
   }
-  const input = createElement('input', attributes);
+  const input = createElement('input', attributes)
   if (files) {
-    Object.defineProperty(input, 'files', { value: files });
+    Object.defineProperty(input, 'files', { value: files })
   }
-  return input;
+  return input
+}
+
+function createFile(file) {
+  if (typeof file.data === 'string') {
+    return new File([new TextEncoder().encode(file.data)], file.name, { type: 'text/plain' })
+  } else if (Array.isArray(file.data)) {
+    return new File([new Uint8Array(file.data)], file.name, { type: 'application/octet-stream' })
+  } else if (file.data instanceof Uint8Array) {
+    return new File([file.data], file.name, { type: 'application/octet-stream' })
+  } else {
+    throw new Error(`Unsupported data type for file "${file.name}": ${typeof file.data}`)
+  }
 }
