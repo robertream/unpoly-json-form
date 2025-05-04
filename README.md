@@ -89,8 +89,8 @@ This library is **compliant** with ([W3C Working Group Note – 29 September 201
 |:--|:--|
 | `<input type="checkbox">` | `value` if checked, or ⚠️`true` if checked and `value` is omitted |
 | `<input type="radio">` | `value` if selected |
-| 🧩`<input type="file">` (single) | structured JSON object if supported `encenctype` is specified (see below) |
-| 🧩`<input type="file" multiple>` | array of structured JSON objects |
+| `<input type="file">` (single) | structured JSON object if supported `encenctype` is specified (see below) |
+| `<input type="file" multiple>` | array of structured JSON objects |
 | `<input>` (all other types) | `value` as string or ⚠️ a number for numeric types |
 | `<textarea>` | raw text content |
 | `<select>` (single) | selected option `value` as string |
@@ -98,8 +98,11 @@ This library is **compliant** with ([W3C Working Group Note – 29 September 201
 
 ⚠️ type coersion extensions, not supported by W3C spec
 
-# 🧩 Input File Serialization (extension, not supported by W3C spec)
-File input support is enabled by specifying an `enctype` attribute on the `<input type="file">` element. To include file content in the JSON payload, use either `application/base64` to encode the file as a base64 string, or `application/octet-stream` to serialize the file content as a raw byte array. Each file is submitted as a structured object containing the file's name, type, size, encoding format, and content. This functionality is an extension beyond the W3C JSON form submission spec and is particularly useful for API endpoints that accept inline file data without requiring multipart uploads.
+
+# 📄 Input File Serialization ❗❗ This feature has been DISABLED ❗❗
+File input support is enabled by specifying an 🧩 `enctype` attribute on the `<input type="file">` element. To include file content in the JSON payload, use either `application/base64` to encode the file as a base64 string, or `application/octet-stream` to serialize the file content as a raw byte array. Each file is submitted as a structured object containing the file's name, type, size, encoding format, and content. 
+
+🧩 The `enctype` field is an extension beyond the W3C JSON form submission spec, in which `application/base64` is the only encoding specified. This is particularly useful for API endpoints that wish to accept inline file data without having to handle multipart uploads or Base64 decoding.
 
 ## 📚 File Object Field Reference
 
@@ -107,19 +110,17 @@ File input support is enabled by specifying an `enctype` attribute on the `<inpu
 |----------|-------------|
 | `name`   | The original file name (`File.name`) as provided by the user |
 | `type`   | The MIME type of the file (`File.type`) |
-| `size`   | The file size in bytes (`File.size`) |
-| `enctype`| How the file was serialized (`application/base64` or `application/octet-stream`) |
-| `content`| The file's contents:<br>- A base64-encoded string if `application/base64`<br>- A numeric array if `application/octet-stream` |
+| 🧩 `enctype`| How the file was serialized (`application/base64` or `application/octet-stream`) |
+| `body`| The file's contents:<br>- A base64-encoded string if `application/base64`<br>- A numeric array if `application/octet-stream` |
 
-### 📄 Example: Base64 Encoding (`enctype="application/base64"`)
+### 📝 Example: Base64 Encoding (`enctype="application/base64"`)
 
 ```json
 {
   "name": "binary.dat",
   "type": "application/octet-stream",
-  "size": 4,
   "enctype": "application/base64",
-  "content": "AP8RIg=="
+  "body": "AP8RIg=="
 }
 ```
 
@@ -129,17 +130,16 @@ File input support is enabled by specifying an `enctype` attribute on the `<inpu
 {
   "name": "example.txt",
   "type": "text/plain",
-  "size": 11,
   "enctype": "application/octet-stream",
-  "content": [72, 101, 108, 108, 111, 32, 87, 111, 114, 108, 100]
+  "body": [72, 101, 108, 108, 111, 32, 87, 111, 114, 108, 100]
 }
 ```
 
 ## 🧷 Input File Notes
 
-- The `content` is always encoded — not raw file data
-- Use `application/base64` encoding is more compact but probably is not supported out of the box by your web framework
-- Use `application/octet-stream` encoding for early implementation or for structured byte-level analysis or validation
+- The `body` is always encoded — not raw file data
+- Use `application/base64` encoding for more a compact encoding, but it may not be supported out of the box by your web framework
+- Use `application/octet-stream` encoding for an easy implementation or for structured byte-level analysis or validation
 - For large files, consider streaming or multipart uploads instead
 
 ---
