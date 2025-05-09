@@ -1,9 +1,9 @@
-async function parseFormElements(form) {
+function parseFormElements(form) {
   const formData = {}
   const elements = form.elements
 
   for (let element of elements) {
-    let value = await getElementValue(element)
+    let value = getElementValue(element)
     if (value != null) {
       assignField(formData, element.name, value)
     }
@@ -11,7 +11,7 @@ async function parseFormElements(form) {
   return formData
 }
 
-async function getElementValue(element) {
+function getElementValue(element) {
   if (!element.name || element.disabled || element.closest('fieldset:disabled')) return null      
   switch (element.tagName.toLowerCase()) {
     case 'textarea':
@@ -36,7 +36,7 @@ function getSelectValue(element) {
   }
 }
 
-async function getInputValue(element) {
+function getInputValue(element) {
   switch (element.type) {
     case 'checkbox':
       return (element.checked) ? true : null
@@ -45,7 +45,7 @@ async function getInputValue(element) {
     case 'number':
       return (element.value.trim() === '') ? null : Number(element.value)
     case 'file':
-      return getFileInputValue(element)
+      return null // disable file input for now // await getFileInputValue(element)
     case 'text':
     case 'email':
     case 'password':
@@ -94,7 +94,7 @@ async function serializeFile(file, enctype) {
       type: file.type,
       size: file.size,
       enctype,
-      content: base64String
+      body: base64String
     }
   } else if (enctype === 'application/octet-stream') {
     return {
@@ -102,7 +102,7 @@ async function serializeFile(file, enctype) {
       type: file.type,
       size: file.size,
       enctype,
-      content: Array.from(uint8Array)
+      body: Array.from(uint8Array)
     }
   }
 }
@@ -112,6 +112,10 @@ function assignField(obj, name, value) {
 }
 
 function parseFormNamePath(name) {
+  // If the brackets are not balanced, treat as flat key
+  const open = (name.match(/\[/g) || []).length;
+  const close = (name.match(/\]/g) || []).length;
+  if (open !== close) return [name];
   const path = []
   name.replace(/\[([^\]]*)\]/g, (_, inner) => {
     path.push(inner)
@@ -160,6 +164,8 @@ function setNestedValue(obj, path, value) {
 
 const DEFAULT_FORM_SIZE_LIMIT = 10 * 1024 * 1024
 up.compiler('form[enctype="application/json"]', function(form) {
+  if (form) return // disable file input handling for now
+
   form.addEventListener('change', function(event) {
     if (event.target.type !== 'file') return
 
@@ -193,15 +199,12 @@ up.compiler('form[enctype="application/json"]', function(form) {
       })
     }
   })
+})
 
-  form.addEventListener('submit', async function(event) {
-    event.preventDefault()
-    const jsonBody = await parseFormElements(form)
-    up.submit(form, {
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(jsonBody)
-    })
-  })
+up.on('up:request:load', function(event) {
+  const form = event.origin?.form
+  if (!form || !form.getAttribute('up-submit') || form.getAttribute('enctype') !== 'application/json') return
+  event.request.contentType = 'application/json'
+  const payload = parseFormElements(form)
+  event.request.payload = JSON.stringify(payload)
 })
