@@ -99,10 +99,10 @@ This library is **compliant** with ([W3C Working Group Note – 29 September 201
 ⚠️ type coersion extensions, not supported by W3C spec
 
 
-# 📄 Input File Serialization ❗❗ This feature has been DISABLED ❗❗
-File input support is enabled by specifying an 🧩 `enctype` attribute on the `<input type="file">` element. To include file content in the JSON payload, use either `application/base64` to encode the file as a base64 string, or `application/octet-stream` to serialize the file content as a raw byte array. Each file is submitted as a structured object containing the file's name, type, size, encoding format, and content. 
+# 📄 Input File Serialization
+File input support is enabled by specifying an `enctype` attribute on the `<input type="file">` element. To include file content in the JSON payload, use either `application/base64` to encode the file as a base64 string, or `application/octet-stream` to serialize the file content as a raw byte array. Each file is submitted as a structured object containing the file's name, type, size, encoding format, and content.
 
-🧩 The `enctype` field is an extension beyond the W3C JSON form submission spec, in which `application/base64` is the only encoding specified. This is particularly useful for API endpoints that wish to accept inline file data without having to handle multipart uploads or Base64 decoding.
+🧩 The `enctype` field is an extension beyond the W3C JSON form submission spec, in which `application/base64` is the only encoding specified. The `application/octet-stream` encoding is particularly useful for API endpoints that wish to accept inline file data without having to handle multipart uploads or Base64 decoding.
 
 ## 📚 File Object Field Reference
 
@@ -110,7 +110,7 @@ File input support is enabled by specifying an 🧩 `enctype` attribute on the `
 |----------|-------------|
 | `name`   | The original file name (`File.name`) as provided by the user |
 | `type`   | The MIME type of the file (`File.type`) |
-| 🧩 `enctype`| How the file was serialized (`application/base64` or `application/octet-stream`) |
+| `enctype` 🧩| How the file was serialized (`application/base64` or `application/octet-stream`) |
 | `body`| The file's contents:<br>- A base64-encoded string if `application/base64`<br>- A numeric array if `application/octet-stream` |
 
 ### 📝 Example: Base64 Encoding (`enctype="application/base64"`)

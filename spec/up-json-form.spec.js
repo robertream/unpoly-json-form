@@ -208,7 +208,7 @@ describe('up-json-form', function() {
     button.click()
   })
 
-  xit('submits file input as base64 when enctype is application/base64', function(done) {
+  it('submits file input as base64 when enctype is application/base64', function(done) {
     const input = createFileInput({
       name: 'binaryfile',
       enctype: 'application/base64',
@@ -226,7 +226,7 @@ describe('up-json-form', function() {
     button.click()
   })
 
-  xit('submits file input as binary when enctype is application/octet-stream', function(done) {
+  it('submits file input as binary when enctype is application/octet-stream', function(done) {
     const input = createFileInput({
       name: 'textfile',
       enctype: 'application/octet-stream',
@@ -244,7 +244,7 @@ describe('up-json-form', function() {
     button.click()
   })
 
-  xit('rejects only the input change that would cause size to exceed the limit', function(done) {
+  it('rejects only the input change that would cause size to exceed the limit', function(done) {
     const goodInput = createFileInput({
       name: 'goodfile',
       enctype: 'application/base64',
@@ -274,7 +274,7 @@ describe('up-json-form', function() {
     }, 50)
   })
 
-  xit('enforces form size limits specified in the up-form-size-limit attribute', function(done) {
+  it('enforces form size limits specified in the up-form-size-limit attribute', function(done) {
     const input = createFileInput({
       name: 'badfile',
       enctype: 'application/base64',
@@ -374,16 +374,19 @@ function createForm(children = [], attributes = {}) {
 
 function expectSubmittedJson (expected, done) {
   const expectations = function(event) {
-    try {
-      const form = event.origin?.form
+    const form = event.origin?.form
+    if (!form) return null
+
+    const request = event.request
+    request.payload.then(payload => {
       expect(form).toBeDefined()
       expect(event.request.contentType).toBe('application/json')
-      expect(JSON.parse(event.request.payload)).toEqual(expected)
-    } finally {
+      expect(JSON.parse(payload)).toEqual(expected)
+    }).finally(() => {
       event.preventDefault()
       up.off('up:request:load', expectations)
       done()
-    }
+    })
   }
   up.on('up:request:load', expectations)
 }
