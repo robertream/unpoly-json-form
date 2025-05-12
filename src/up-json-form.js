@@ -1,9 +1,9 @@
-function parseFormElements(form) {
+async function parseFormElements(form) {
   const formData = {}
   const elements = form.elements
 
   for (let element of elements) {
-    let value = getElementValue(element)
+    let value = await getElementValue(element)
     if (value != null) {
       assignField(formData, element.name, value)
     }
@@ -11,15 +11,15 @@ function parseFormElements(form) {
   return formData
 }
 
-function getElementValue(element) {
-  if (!element.name || element.disabled || element.closest('fieldset:disabled')) return null      
+async function getElementValue(element) {
+  if (!element.name || element.disabled || element.closest('fieldset:disabled')) return null
   switch (element.tagName.toLowerCase()) {
     case 'textarea':
       return element.value
     case 'select':
       return getSelectValue(element)
     case 'input':
-      return getInputValue(element)
+      return await getInputValue(element)
     default:
       return null
   }
@@ -36,7 +36,7 @@ function getSelectValue(element) {
   }
 }
 
-function getInputValue(element) {
+async function getInputValue(element) {
   switch (element.type) {
     case 'checkbox':
       return (element.checked) ? true : null
@@ -45,7 +45,7 @@ function getInputValue(element) {
     case 'number':
       return (element.value.trim() === '') ? null : Number(element.value)
     case 'file':
-      return null // disable file input for now // await getFileInputValue(element)
+      return await getFileInputValue(element)
     case 'text':
     case 'email':
     case 'password':
@@ -92,7 +92,6 @@ async function serializeFile(file, enctype) {
     return {
       name: file.name,
       type: file.type,
-      size: file.size,
       enctype,
       body: base64String
     }
@@ -100,7 +99,6 @@ async function serializeFile(file, enctype) {
     return {
       name: file.name,
       type: file.type,
-      size: file.size,
       enctype,
       body: Array.from(uint8Array)
     }
@@ -163,9 +161,7 @@ function setNestedValue(obj, path, value) {
 }
 
 const DEFAULT_FORM_SIZE_LIMIT = 10 * 1024 * 1024
-up.compiler('form[enctype="application/json"]', function(form) {
-  if (form) return // disable file input handling for now
-
+up.compiler('form[enctype="application/json"][up-submit]', function(form) {
   form.addEventListener('change', function(event) {
     if (event.target.type !== 'file') return
 
@@ -205,6 +201,5 @@ up.on('up:request:load', function(event) {
   const form = event.origin?.form
   if (!form || !form.getAttribute('up-submit') || form.getAttribute('enctype') !== 'application/json') return
   event.request.contentType = 'application/json'
-  const payload = parseFormElements(form)
-  event.request.payload = JSON.stringify(payload)
+  event.request.payload = parseFormElements(form).then(JSON.stringify)
 })
